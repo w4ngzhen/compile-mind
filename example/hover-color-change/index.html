@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+        #canvas {
+            border: thin solid blue;
+        }
+    </style>
+</head>
+<body>
+<p id="message"></p>
+<canvas id="canvas" width="1200" height="600"></canvas>
+</body>
+<script type="text/javascript">
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext("2d");
+
+
+  function rectPath(location, size) {
+    const rect = new Path2D();
+    rect.rect(location.x, location.y, size.w, size.h);
+    return rect;
+  }
+
+  function getLocation(x, y) {
+    let clientRect = canvas.getBoundingClientRect();
+    return {
+      x: (x - clientRect.left) * (canvas.width / clientRect.width),
+      y: (y - clientRect.top) * (canvas.height / clientRect.height)
+      /*
+       * 此处不用下面两行是为了防止使用CSS和JS改变了canvas的高宽之后是表面积拉大而实际
+       * 显示像素不变而造成的坐标获取不准的情况
+      x: (x - clientRect.left),
+      y: (y - clientRect.top)
+      */
+    };
+  }
+
+  function drawHorizontalLine(y) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+  function drawVerticalLine(x) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+
+  canvas.onmousemove = function (e) {
+    let location = getLocation(e.clientX, e.clientY);
+    let message = document.getElementById("message");
+    message.innerHTML = JSON.stringify(location)
+      + '-' + JSON.stringify({clientX: e.clientX, clientY: e.clientY})
+      + '-' + JSON.stringify({offsetX: e.offsetX, offsetY: e.offsetY});
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawHorizontalLine(location.y);
+    drawVerticalLine(location.x);
+
+    ctx.save();
+    const rect = rectPath({x: 10, y: 10}, {w: 300, h: 200});
+    ctx.strokeStyle = ctx.isPointInPath(rect, e.offsetX, e.offsetY) ? 'red' : 'black';
+    ctx.stroke(rect);
+    ctx.restore();
+  };
+</script>
+</html>
